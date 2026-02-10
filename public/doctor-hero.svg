@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 420" fill="none">
+  <!-- Background circle -->
+  <ellipse cx="190" cy="250" rx="140" ry="160" fill="#c8daea" opacity="0.3"/>
+
+  <!-- Body/Lab coat -->
+  <path d="M120 420 L120 280 Q120 240 160 220 L220 220 Q260 240 260 280 L260 420" fill="white" stroke="#1a3c5e" stroke-width="2"/>
+
+  <!-- Collar -->
+  <path d="M160 220 L180 250 L190 230 L200 250 L220 220" fill="white" stroke="#1a3c5e" stroke-width="1.5"/>
+
+  <!-- Head -->
+  <ellipse cx="190" cy="180" rx="40" ry="48" fill="#f5d0b0"/>
+
+  <!-- Hair -->
+  <path d="M150 175 Q150 130 190 125 Q230 130 230 175 Q225 155 210 150 Q190 145 170 150 Q155 155 150 175Z" fill="#3d2314"/>
+  <path d="M148 180 Q145 160 150 145 Q152 140 155 175Z" fill="#3d2314"/>
+  <path d="M232 180 Q235 160 230 145 Q228 140 225 175Z" fill="#3d2314"/>
+
+  <!-- Eyes -->
+  <ellipse cx="175" cy="178" rx="5" ry="5" fill="#1a3c5e"/>
+  <ellipse cx="205" cy="178" rx="5" ry="5" fill="#1a3c5e"/>
+  <ellipse cx="176" cy="177" rx="2" ry="2" fill="white"/>
+  <ellipse cx="206" cy="177" rx="2" ry="2" fill="white"/>
+
+  <!-- Eyebrows -->
+  <path d="M167 168 Q175 164 183 168" stroke="#3d2314" stroke-width="1.5" fill="none"/>
+  <path d="M197 168 Q205 164 213 168" stroke="#3d2314" stroke-width="1.5" fill="none"/>
+
+  <!-- Smile -->
+  <path d="M180 195 Q190 205 200 195" stroke="#c47a5a" stroke-width="1.5" fill="none"/>
+
+  <!-- Stethoscope -->
+  <path d="M170 250 Q170 280 185 300" stroke="#1a3c5e" stroke-width="2.5" fill="none"/>
+  <circle cx="185" cy="305" r="8" fill="#1a3c5e"/>
+  <circle cx="185" cy="305" r="4" fill="#4a7a9e"/>
+
+  <!-- Clipboard -->
+  <rect x="230" y="260" width="50" height="70" rx="5" fill="#c47a5a" stroke="#8b4a2a" stroke-width="1.5"/>
+  <rect x="235" y="275" width="40" height="50" rx="3" fill="white"/>
+  <line x1="240" y1="285" x2="270" y2="285" stroke="#ccc" stroke-width="1"/>
+  <line x1="240" y1="295" x2="265" y2="295" stroke="#ccc" stroke-width="1"/>
+  <line x1="240" y1="305" x2="270" y2="305" stroke="#ccc" stroke-width="1"/>
+  <rect x="247" y="255" width="16" height="10" rx="3" fill="#8b4a2a"/>
+
+  <!-- Right arm holding clipboard -->
+  <path d="M260 280 Q270 270 255 255 Q245 245 235 250" fill="#f5d0b0" stroke="#e8b890" stroke-width="1"/>
+
+  <!-- Buttons on coat -->
+  <circle cx="190" cy="280" r="3" fill="#1a3c5e"/>
+  <circle cx="190" cy="300" r="3" fill="#1a3c5e"/>
+  <circle cx="190" cy="320" r="3" fill="#1a3c5e"/>
+</svg>
