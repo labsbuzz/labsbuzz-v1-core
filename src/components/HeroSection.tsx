@@ -1,26 +1,83 @@
 "use client";
 
-import { useState } from "react";
-import { Search, MapPin } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, MapPin, ChevronDown, TestTubes } from "lucide-react";
 import Image from "next/image";
 
 interface HeroSectionProps {
   onSearch: (test: string, pincode: string) => void;
 }
 
+interface TestSuggestion {
+  id: string;
+  name: string;
+  category: string;
+}
+
 export default function HeroSection({ onSearch }: HeroSectionProps) {
   const [testQuery, setTestQuery] = useState("");
   const [pincodeQuery, setPincodeQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<TestSuggestion[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedTest, setSelectedTest] = useState<string>("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch available tests on mount
+  useEffect(() => {
+    async function fetchTests() {
+      try {
+        const res = await fetch("/api/search?mode=suggestions");
+        const data = await res.json();
+        setSuggestions(data.tests || []);
+      } catch {
+        // silently fail
+      }
+    }
+    fetchTests();
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Filter suggestions based on input
+  const filtered = testQuery.trim()
+    ? suggestions.filter((s) =>
+        s.name.toLowerCase().includes(testQuery.toLowerCase())
+      )
+    : suggestions;
+
+  function handleSelectTest(test: TestSuggestion) {
+    setTestQuery(test.name);
+    setSelectedTest(test.name);
+    setShowDropdown(false);
+  }
+
+  function handleInputChange(value: string) {
+    setTestQuery(value);
+    setSelectedTest("");
+    setShowDropdown(true);
+  }
 
   function handleSearch() {
-    const test = testQuery.trim();
+    const test = selectedTest || testQuery.trim();
     const pincode = pincodeQuery.trim();
     if (!test && !pincode) return;
+    setShowDropdown(false);
     onSearch(test, pincode);
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter") handleSearch();
+    if (e.key === "Escape") setShowDropdown(false);
   }
 
   return (
@@ -65,17 +122,55 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
 
             {/* Search bar */}
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-0">
-              <div className="flex flex-1 items-center rounded-full bg-white px-4 py-3 shadow-lg sm:rounded-l-full sm:rounded-r-none">
-                <Search size={20} className="mr-2 shrink-0 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search Test/Scan..."
-                  value={testQuery}
-                  onChange={(e) => setTestQuery(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="w-full bg-transparent text-base text-gray-700 placeholder-gray-400 outline-none"
-                />
+              {/* Test input with dropdown */}
+              <div className="relative flex-1" ref={dropdownRef}>
+                <div className="flex items-center rounded-full bg-white px-4 py-3 shadow-lg sm:rounded-l-full sm:rounded-r-none">
+                  <Search size={20} className="mr-2 shrink-0 text-gray-400" />
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    placeholder="Search Test/Scan..."
+                    value={testQuery}
+                    onChange={(e) => handleInputChange(e.target.value)}
+                    onFocus={() => setShowDropdown(true)}
+                    onKeyDown={handleKeyDown}
+                    className="w-full bg-transparent text-base text-gray-700 placeholder-gray-400 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowDropdown(!showDropdown)}
+                    className="ml-1 shrink-0 rounded p-0.5 text-gray-400 transition-colors hover:text-gray-600"
+                  >
+                    <ChevronDown
+                      size={18}
+                      className={`transition-transform ${showDropdown ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                </div>
+
+                {/* Dropdown */}
+                {showDropdown && filtered.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
+                    {filtered.map((test) => (
+                      <button
+                        key={test.id}
+                        type="button"
+                        onClick={() => handleSelectTest(test)}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 first:rounded-t-2xl last:rounded-b-2xl"
+                      >
+                        <TestTubes size={16} className="shrink-0 text-primary/60" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-gray-800">
+                            {test.name}
+                          </p>
+                          <p className="text-[11px] text-gray-400">{test.category}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+
               <div className="flex items-center rounded-full border-t bg-white px-4 py-3 shadow-lg sm:rounded-none sm:border-l sm:border-t-0">
                 <MapPin size={20} className="mr-2 shrink-0 text-accent" />
                 <input

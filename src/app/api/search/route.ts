@@ -9,14 +9,30 @@ export async function GET(request: NextRequest) {
     const test = searchParams.get("test")?.trim() || "";
     const labId = searchParams.get("labId")?.trim() || "";
 
+    const mode = searchParams.get("mode")?.trim() || "";
+
+    const supabase = createAdminClient();
+
+    // Case 0: Fetch all available test names for autocomplete
+    if (mode === "suggestions") {
+      const { data: tests, error } = await supabase
+        .from("available_tests")
+        .select("id, name, category")
+        .order("name");
+
+      if (error) {
+        return NextResponse.json({ error: "Failed to fetch tests" }, { status: 500 });
+      }
+
+      return NextResponse.json({ tests: tests || [] });
+    }
+
     if (!pincode && !test && !labId) {
       return NextResponse.json(
         { error: "Please provide a pincode or test name" },
         { status: 400 }
       );
     }
-
-    const supabase = createAdminClient();
 
     // Case 1: Expand a specific lab's services
     if (labId) {

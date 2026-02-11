@@ -14,6 +14,11 @@ import {
   ChevronUp,
   TestTubes,
   SearchX,
+  X,
+  Phone,
+  Mail,
+  ShieldCheck,
+  CalendarCheck,
 } from "lucide-react";
 
 interface LabResult {
@@ -52,6 +57,20 @@ interface LabDetailService {
   };
 }
 
+// Unified modal data
+interface ModalData {
+  test_name: string;
+  category: string;
+  lab_name: string;
+  city: string;
+  state: string;
+  pincode: string;
+  unique_lab_id: string;
+  price_inr: number;
+  prerequisite: string;
+  report_time_hours: number;
+}
+
 type SearchMode = "idle" | "labs" | "services" | "lab_detail";
 
 export default function Home() {
@@ -63,6 +82,7 @@ export default function Home() {
   const [labServices, setLabServices] = useState<LabDetailService[]>([]);
   const [labServicesLoading, setLabServicesLoading] = useState(false);
   const [searchInfo, setSearchInfo] = useState("");
+  const [modalData, setModalData] = useState<ModalData | null>(null);
 
   async function handleSearch(test: string, pincode: string) {
     setLoading(true);
@@ -126,6 +146,38 @@ export default function Home() {
     } finally {
       setLabServicesLoading(false);
     }
+  }
+
+  // Open modal from service search results
+  function openServiceModal(service: ServiceResult) {
+    setModalData({
+      test_name: service.test_name,
+      category: service.category,
+      lab_name: service.lab_name,
+      city: service.city,
+      state: service.state,
+      pincode: service.pincode,
+      unique_lab_id: service.unique_lab_id,
+      price_inr: service.price_inr,
+      prerequisite: service.prerequisite,
+      report_time_hours: service.report_time_hours,
+    });
+  }
+
+  // Open modal from expanded lab's service list
+  function openLabServiceModal(service: LabDetailService, lab: LabResult) {
+    setModalData({
+      test_name: service.available_tests.name,
+      category: service.available_tests.category,
+      lab_name: lab.lab_name,
+      city: lab.city,
+      state: lab.state,
+      pincode: lab.pincode,
+      unique_lab_id: lab.unique_lab_id,
+      price_inr: service.price_inr,
+      prerequisite: service.prerequisite,
+      report_time_hours: service.report_time_hours,
+    });
   }
 
   const hasResults =
@@ -232,9 +284,10 @@ export default function Home() {
                           ) : (
                             <div className="divide-y divide-gray-100">
                               {labServices.map((service) => (
-                                <div
+                                <button
                                   key={service.id}
-                                  className="px-5 py-3.5"
+                                  onClick={() => openLabServiceModal(service, lab)}
+                                  className="w-full px-5 py-3.5 text-left transition-colors hover:bg-gray-50/60"
                                 >
                                   <div className="flex items-center gap-2">
                                     <h4 className="text-sm font-semibold text-gray-900">
@@ -271,7 +324,7 @@ export default function Home() {
                                       </span>
                                     )}
                                   </div>
-                                </div>
+                                </button>
                               ))}
                             </div>
                           )}
@@ -295,9 +348,10 @@ export default function Home() {
                 </p>
                 <div className="space-y-3">
                   {services.map((service) => (
-                    <div
+                    <button
                       key={service.id}
-                      className="rounded-2xl bg-white p-5 shadow-sm"
+                      onClick={() => openServiceModal(service)}
+                      className="w-full rounded-2xl bg-white p-5 text-left shadow-sm transition-shadow hover:shadow-md"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -347,13 +401,131 @@ export default function Home() {
                           </span>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
             )}
           </div>
         </section>
+      )}
+
+      {/* Detail Modal */}
+      {modalData && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+          onClick={() => setModalData(null)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+          {/* Modal */}
+          <div
+            className="relative w-full max-w-md animate-in slide-in-from-bottom rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setModalData(null)}
+              className="absolute right-4 top-4 rounded-full bg-gray-100 p-1.5 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Header */}
+            <div className="border-b border-gray-100 px-6 pb-4 pt-6">
+              <div className="flex items-center gap-2">
+                <TestTubes size={20} className="text-primary" />
+                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                  {modalData.category}
+                </span>
+              </div>
+              <h2 className="mt-2 text-xl font-bold text-gray-900">
+                {modalData.test_name}
+              </h2>
+            </div>
+
+            {/* Price banner */}
+            <div className="flex items-center justify-between bg-green-50 px-6 py-4">
+              <span className="text-sm font-medium text-green-800">Price</span>
+              <div className="flex items-center gap-1">
+                <IndianRupee size={20} className="text-green-600" />
+                <span className="text-2xl font-extrabold text-green-700">
+                  {modalData.price_inr}
+                </span>
+              </div>
+            </div>
+
+            {/* Lab details */}
+            <div className="space-y-4 px-6 py-5">
+              {/* Lab info */}
+              <div className="rounded-xl bg-gray-50 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <Building2 size={20} className="text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-sm font-bold text-gray-900">
+                      {modalData.lab_name}
+                    </h3>
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <MapPin size={11} />
+                      {modalData.city}, {modalData.state} — {modalData.pincode}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-2 flex items-center gap-1.5 pl-[52px]">
+                  <ShieldCheck size={12} className="text-green-600" />
+                  <span className="text-[11px] font-medium text-green-700">
+                    Verified Lab
+                  </span>
+                  <span className="ml-1 font-mono text-[10px] text-gray-400">
+                    {modalData.unique_lab_id}
+                  </span>
+                </div>
+              </div>
+
+              {/* Test details */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-gray-100 p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                    <Clock size={13} className="text-blue-500" />
+                    Report Time
+                  </div>
+                  <p className="mt-1 text-sm font-bold text-gray-900">
+                    {modalData.report_time_hours} hours
+                  </p>
+                </div>
+                <div className="rounded-xl border border-gray-100 p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                    <ClipboardList size={13} className="text-amber-500" />
+                    Preparation
+                  </div>
+                  <p className="mt-1 text-sm font-bold text-gray-900">
+                    {modalData.prerequisite || "None required"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Book Now button */}
+            <div className="border-t border-gray-100 px-6 pb-6 pt-4">
+              <button
+                onClick={() => {
+                  // Placeholder — booking flow to be implemented
+                  alert("Booking feature coming soon!");
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-accent py-4 text-base font-bold text-white shadow-lg transition-colors hover:bg-accent-dark"
+              >
+                <CalendarCheck size={20} />
+                Book Now
+              </button>
+              <p className="mt-2 text-center text-[11px] text-gray-400">
+                Free cancellation available
+              </p>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

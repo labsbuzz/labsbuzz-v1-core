@@ -1,40 +1,5 @@
--- ===========================================
--- STEP 1: CLEANUP — Remove all non-admin data
--- Run this FIRST
--- ===========================================
-
--- Delete all lab services
-DELETE FROM public.lab_services;
-
--- Delete all lab registrations
-DELETE FROM public.lab_registrations;
-
--- Delete all non-admin profiles
-DELETE FROM public.profiles WHERE role != 'admin';
-
--- Delete all non-admin auth users
-DELETE FROM auth.identities WHERE user_id IN (
-  SELECT id FROM auth.users WHERE email != 'amanksah123@gmail.com'
-);
-DELETE FROM auth.users WHERE email != 'amanksah123@gmail.com';
-
--- ===========================================
--- STEP 2: STOP HERE!
--- Go to Supabase Dashboard → Authentication → Add User
--- Create these 2 users (check "Auto Confirm" for both):
---
---   Email: user3@labsbuzz.com   Password: 12345678
---   Email: user4@labsbuzz.com   Password: 12345678
---
--- Then copy both UUIDs and paste them below in STEP 3
--- ===========================================
-
-
--- ===========================================
 -- STEP 3: INSERT MOCK DATA
--- Replace the two UUIDs below with the real ones from dashboard
--- Then run everything from here down
--- ===========================================
+-- Run this AFTER creating user3@labsbuzz.com and user4@labsbuzz.com in Auth dashboard
 
 DO $$
 DECLARE
@@ -45,7 +10,6 @@ DECLARE
   t_cbc UUID; t_sugar UUID; t_lipid UUID; t_thyroid UUID; t_lft UUID;
   t_kft UUID; t_urine UUID; t_hba1c UUID; t_vitd UUID; t_vitb12 UUID;
 BEGIN
-  -- *** PASTE YOUR UUIDs HERE ***
   SELECT id INTO u1 FROM auth.users WHERE email = 'user3@labsbuzz.com';
   SELECT id INTO u2 FROM auth.users WHERE email = 'user4@labsbuzz.com';
 
@@ -59,87 +23,69 @@ BEGIN
     (u2, 'user4@labsbuzz.com', '9123456789', 'labs')
   ON CONFLICT (id) DO UPDATE SET role = 'labs';
 
-  -- =============================================
   -- User 1's 6 labs (Bihar/Jharkhand region)
-  -- =============================================
   INSERT INTO public.lab_registrations (user_id, unique_lab_id, email, phone, lab_name, landmark, city, district, state, pincode, latitude, longitude, lab_reg_id_no, description, status)
-  VALUES
-    (u1, 'LB-MOCK0001', 'user3@labsbuzz.com', '9876543210', 'HealthFirst Diagnostics', 'Near City Hospital', 'Patna', 'Patna', 'Bihar', '800001', 25.6093, 85.1376, 'REG-BH-001', 'Full-service diagnostic lab in Patna', 'approved')
+  VALUES (u1, 'LB-MOCK0001', 'user3@labsbuzz.com', '9876543210', 'HealthFirst Diagnostics', 'Near City Hospital', 'Patna', 'Patna', 'Bihar', '800001', 25.6093, 85.1376, 'REG-BH-001', 'Full-service diagnostic lab in Patna', 'approved')
   RETURNING id INTO new_id;
   lab_ids := lab_ids || new_id;
 
   INSERT INTO public.lab_registrations (user_id, unique_lab_id, email, phone, lab_name, landmark, city, district, state, pincode, latitude, longitude, lab_reg_id_no, description, status)
-  VALUES
-    (u1, 'LB-MOCK0002', 'user3@labsbuzz.com', '9876543210', 'MedScan Labs', 'Gandhi Maidan Area', 'Patna', 'Patna', 'Bihar', '800001', 25.6120, 85.1400, 'REG-BH-002', 'Advanced scanning and blood testing', 'approved')
+  VALUES (u1, 'LB-MOCK0002', 'user3@labsbuzz.com', '9876543210', 'MedScan Labs', 'Gandhi Maidan Area', 'Patna', 'Patna', 'Bihar', '800001', 25.6120, 85.1400, 'REG-BH-002', 'Advanced scanning and blood testing', 'approved')
   RETURNING id INTO new_id;
   lab_ids := lab_ids || new_id;
 
   INSERT INTO public.lab_registrations (user_id, unique_lab_id, email, phone, lab_name, landmark, city, district, state, pincode, latitude, longitude, lab_reg_id_no, description, status)
-  VALUES
-    (u1, 'LB-MOCK0003', 'user3@labsbuzz.com', '9876543210', 'Bihar Path Lab', 'Boring Road', 'Patna', 'Patna', 'Bihar', '800013', 25.6000, 85.1200, 'REG-BH-003', 'Trusted pathology services', 'approved')
+  VALUES (u1, 'LB-MOCK0003', 'user3@labsbuzz.com', '9876543210', 'Bihar Path Lab', 'Boring Road', 'Patna', 'Patna', 'Bihar', '800013', 25.6000, 85.1200, 'REG-BH-003', 'Trusted pathology services', 'approved')
   RETURNING id INTO new_id;
   lab_ids := lab_ids || new_id;
 
   INSERT INTO public.lab_registrations (user_id, unique_lab_id, email, phone, lab_name, landmark, city, district, state, pincode, latitude, longitude, lab_reg_id_no, description, status)
-  VALUES
-    (u1, 'LB-MOCK0004', 'user3@labsbuzz.com', '9876543210', 'CarePoint Diagnostics', 'Near Mahavir Temple', 'Patna', 'Patna', 'Bihar', '800001', 25.6150, 85.1450, 'REG-BH-004', 'Affordable diagnostics for all', 'approved')
+  VALUES (u1, 'LB-MOCK0004', 'user3@labsbuzz.com', '9876543210', 'CarePoint Diagnostics', 'Near Mahavir Temple', 'Patna', 'Patna', 'Bihar', '800001', 25.6150, 85.1450, 'REG-BH-004', 'Affordable diagnostics for all', 'approved')
   RETURNING id INTO new_id;
   lab_ids := lab_ids || new_id;
 
   INSERT INTO public.lab_registrations (user_id, unique_lab_id, email, phone, lab_name, landmark, city, district, state, pincode, latitude, longitude, lab_reg_id_no, description, status)
-  VALUES
-    (u1, 'LB-MOCK0005', 'user3@labsbuzz.com', '9876543210', 'Gaya Medical Lab', 'Station Road', 'Gaya', 'Gaya', 'Bihar', '823001', 24.7955, 84.9994, 'REG-BH-005', 'Quality testing in Gaya', 'approved')
+  VALUES (u1, 'LB-MOCK0005', 'user3@labsbuzz.com', '9876543210', 'Gaya Medical Lab', 'Station Road', 'Gaya', 'Gaya', 'Bihar', '823001', 24.7955, 84.9994, 'REG-BH-005', 'Quality testing in Gaya', 'approved')
   RETURNING id INTO new_id;
   lab_ids := lab_ids || new_id;
 
   INSERT INTO public.lab_registrations (user_id, unique_lab_id, email, phone, lab_name, landmark, city, district, state, pincode, latitude, longitude, lab_reg_id_no, description, status)
-  VALUES
-    (u1, 'LB-MOCK0006', 'user3@labsbuzz.com', '9876543210', 'Ranchi DiagnoHub', 'Main Road', 'Ranchi', 'Ranchi', 'Jharkhand', '834001', 23.3441, 85.3096, 'REG-JH-001', 'Modern diagnostics in Ranchi', 'approved')
+  VALUES (u1, 'LB-MOCK0006', 'user3@labsbuzz.com', '9876543210', 'Ranchi DiagnoHub', 'Main Road', 'Ranchi', 'Ranchi', 'Jharkhand', '834001', 23.3441, 85.3096, 'REG-JH-001', 'Modern diagnostics in Ranchi', 'approved')
   RETURNING id INTO new_id;
   lab_ids := lab_ids || new_id;
 
-  -- =============================================
   -- User 2's 6 labs (Delhi/Mumbai/Bangalore)
-  -- =============================================
   INSERT INTO public.lab_registrations (user_id, unique_lab_id, email, phone, lab_name, landmark, city, district, state, pincode, latitude, longitude, lab_reg_id_no, description, status)
-  VALUES
-    (u2, 'LB-MOCK0007', 'user4@labsbuzz.com', '9123456789', 'Delhi Prime Labs', 'Connaught Place', 'New Delhi', 'Central Delhi', 'Delhi', '110001', 28.6315, 77.2167, 'REG-DL-001', 'Premium diagnostics in Delhi', 'approved')
+  VALUES (u2, 'LB-MOCK0007', 'user4@labsbuzz.com', '9123456789', 'Delhi Prime Labs', 'Connaught Place', 'New Delhi', 'Central Delhi', 'Delhi', '110001', 28.6315, 77.2167, 'REG-DL-001', 'Premium diagnostics in Delhi', 'approved')
   RETURNING id INTO new_id;
   lab_ids := lab_ids || new_id;
 
   INSERT INTO public.lab_registrations (user_id, unique_lab_id, email, phone, lab_name, landmark, city, district, state, pincode, latitude, longitude, lab_reg_id_no, description, status)
-  VALUES
-    (u2, 'LB-MOCK0008', 'user4@labsbuzz.com', '9123456789', 'South Delhi Diagnostics', 'Saket Metro Station', 'New Delhi', 'South Delhi', 'Delhi', '110017', 28.5244, 77.2066, 'REG-DL-002', 'Convenient lab in South Delhi', 'approved')
+  VALUES (u2, 'LB-MOCK0008', 'user4@labsbuzz.com', '9123456789', 'South Delhi Diagnostics', 'Saket Metro Station', 'New Delhi', 'South Delhi', 'Delhi', '110017', 28.5244, 77.2066, 'REG-DL-002', 'Convenient lab in South Delhi', 'approved')
   RETURNING id INTO new_id;
   lab_ids := lab_ids || new_id;
 
   INSERT INTO public.lab_registrations (user_id, unique_lab_id, email, phone, lab_name, landmark, city, district, state, pincode, latitude, longitude, lab_reg_id_no, description, status)
-  VALUES
-    (u2, 'LB-MOCK0009', 'user4@labsbuzz.com', '9123456789', 'Noida LifeCare Lab', 'Sector 18', 'Noida', 'Gautam Buddha Nagar', 'Uttar Pradesh', '201301', 28.5700, 77.3200, 'REG-UP-001', 'Modern lab in Noida', 'approved')
+  VALUES (u2, 'LB-MOCK0009', 'user4@labsbuzz.com', '9123456789', 'Noida LifeCare Lab', 'Sector 18', 'Noida', 'Gautam Buddha Nagar', 'Uttar Pradesh', '201301', 28.5700, 77.3200, 'REG-UP-001', 'Modern lab in Noida', 'approved')
   RETURNING id INTO new_id;
   lab_ids := lab_ids || new_id;
 
   INSERT INTO public.lab_registrations (user_id, unique_lab_id, email, phone, lab_name, landmark, city, district, state, pincode, latitude, longitude, lab_reg_id_no, description, status)
-  VALUES
-    (u2, 'LB-MOCK0010', 'user4@labsbuzz.com', '9123456789', 'Mumbai Central Lab', 'Dadar Station', 'Mumbai', 'Mumbai City', 'Maharashtra', '400014', 19.0178, 72.8478, 'REG-MH-001', 'Top lab in Mumbai', 'approved')
+  VALUES (u2, 'LB-MOCK0010', 'user4@labsbuzz.com', '9123456789', 'Mumbai Central Lab', 'Dadar Station', 'Mumbai', 'Mumbai City', 'Maharashtra', '400014', 19.0178, 72.8478, 'REG-MH-001', 'Top lab in Mumbai', 'approved')
   RETURNING id INTO new_id;
   lab_ids := lab_ids || new_id;
 
   INSERT INTO public.lab_registrations (user_id, unique_lab_id, email, phone, lab_name, landmark, city, district, state, pincode, latitude, longitude, lab_reg_id_no, description, status)
-  VALUES
-    (u2, 'LB-MOCK0011', 'user4@labsbuzz.com', '9123456789', 'Pune DiagnoCenter', 'Shivaji Nagar', 'Pune', 'Pune', 'Maharashtra', '411005', 18.5314, 73.8446, 'REG-MH-002', 'Trusted testing in Pune', 'approved')
+  VALUES (u2, 'LB-MOCK0011', 'user4@labsbuzz.com', '9123456789', 'Pune DiagnoCenter', 'Shivaji Nagar', 'Pune', 'Pune', 'Maharashtra', '411005', 18.5314, 73.8446, 'REG-MH-002', 'Trusted testing in Pune', 'approved')
   RETURNING id INTO new_id;
   lab_ids := lab_ids || new_id;
 
   INSERT INTO public.lab_registrations (user_id, unique_lab_id, email, phone, lab_name, landmark, city, district, state, pincode, latitude, longitude, lab_reg_id_no, description, status)
-  VALUES
-    (u2, 'LB-MOCK0012', 'user4@labsbuzz.com', '9123456789', 'Bangalore BioLab', 'MG Road', 'Bangalore', 'Bangalore Urban', 'Karnataka', '560001', 12.9716, 77.5946, 'REG-KA-001', 'High-tech lab in Bangalore', 'approved')
+  VALUES (u2, 'LB-MOCK0012', 'user4@labsbuzz.com', '9123456789', 'Bangalore BioLab', 'MG Road', 'Bangalore', 'Bangalore Urban', 'Karnataka', '560001', 12.9716, 77.5946, 'REG-KA-001', 'High-tech lab in Bangalore', 'approved')
   RETURNING id INTO new_id;
   lab_ids := lab_ids || new_id;
 
-  -- =============================================
   -- Fetch test IDs
-  -- =============================================
   SELECT id INTO t_cbc FROM public.available_tests WHERE name = 'Complete Blood Count (CBC)';
   SELECT id INTO t_sugar FROM public.available_tests WHERE name = 'Blood Sugar (Fasting)';
   SELECT id INTO t_lipid FROM public.available_tests WHERE name = 'Lipid Profile';
@@ -151,9 +97,7 @@ BEGIN
   SELECT id INTO t_vitd FROM public.available_tests WHERE name = 'Vitamin D';
   SELECT id INTO t_vitb12 FROM public.available_tests WHERE name = 'Vitamin B12';
 
-  -- =============================================
   -- Lab 1: HealthFirst Diagnostics (Patna 800001)
-  -- =============================================
   INSERT INTO public.lab_services (lab_registration_id, test_id, price_inr, prerequisite, report_time_hours) VALUES
     (lab_ids[1], t_cbc, 250, '12 hours fasting required', 6),
     (lab_ids[1], t_sugar, 120, '12 hours fasting required', 4),
@@ -163,9 +107,7 @@ BEGIN
     (lab_ids[1], t_kft, 380, '8 hours fasting required', 12),
     (lab_ids[1], t_urine, 100, 'Early morning sample preferred', 4);
 
-  -- =============================================
   -- Lab 2: MedScan Labs (Patna 800001)
-  -- =============================================
   INSERT INTO public.lab_services (lab_registration_id, test_id, price_inr, prerequisite, report_time_hours) VALUES
     (lab_ids[2], t_cbc, 280, '12 hours fasting required', 5),
     (lab_ids[2], t_sugar, 100, '12 hours fasting required', 3),
@@ -175,9 +117,7 @@ BEGIN
     (lab_ids[2], t_urine, 80, 'Early morning sample preferred', 3),
     (lab_ids[2], t_vitd, 700, 'Avoid biotin supplements for 48 hours', 24);
 
-  -- =============================================
   -- Lab 3: Bihar Path Lab (Patna 800013)
-  -- =============================================
   INSERT INTO public.lab_services (lab_registration_id, test_id, price_inr, prerequisite, report_time_hours) VALUES
     (lab_ids[3], t_cbc, 200, '12 hours fasting required', 8),
     (lab_ids[3], t_sugar, 90, '12 hours fasting required', 4),
@@ -187,9 +127,7 @@ BEGIN
     (lab_ids[3], t_urine, 70, 'Early morning sample preferred', 5),
     (lab_ids[3], t_hba1c, 300, 'No special preparation required', 10);
 
-  -- =============================================
   -- Lab 4: CarePoint Diagnostics (Patna 800001)
-  -- =============================================
   INSERT INTO public.lab_services (lab_registration_id, test_id, price_inr, prerequisite, report_time_hours) VALUES
     (lab_ids[4], t_cbc, 220, '12 hours fasting required', 6),
     (lab_ids[4], t_sugar, 110, '12 hours fasting required', 3),
@@ -199,9 +137,7 @@ BEGIN
     (lab_ids[4], t_hba1c, 320, 'No special preparation required', 8),
     (lab_ids[4], t_vitb12, 600, 'No special preparation required', 24);
 
-  -- =============================================
   -- Lab 5: Gaya Medical Lab (Gaya 823001)
-  -- =============================================
   INSERT INTO public.lab_services (lab_registration_id, test_id, price_inr, prerequisite, report_time_hours) VALUES
     (lab_ids[5], t_cbc, 180, '12 hours fasting required', 8),
     (lab_ids[5], t_sugar, 80, '12 hours fasting required', 5),
@@ -211,9 +147,7 @@ BEGIN
     (lab_ids[5], t_urine, 60, 'Early morning sample preferred', 6),
     (lab_ids[5], t_hba1c, 280, 'No special preparation required', 12);
 
-  -- =============================================
   -- Lab 6: Ranchi DiagnoHub (Ranchi 834001)
-  -- =============================================
   INSERT INTO public.lab_services (lab_registration_id, test_id, price_inr, prerequisite, report_time_hours) VALUES
     (lab_ids[6], t_cbc, 240, '12 hours fasting required', 6),
     (lab_ids[6], t_sugar, 115, '12 hours fasting required', 4),
@@ -223,9 +157,7 @@ BEGIN
     (lab_ids[6], t_vitd, 680, 'Avoid biotin supplements for 48 hours', 24),
     (lab_ids[6], t_vitb12, 630, 'No special preparation required', 24);
 
-  -- =============================================
   -- Lab 7: Delhi Prime Labs (Delhi 110001)
-  -- =============================================
   INSERT INTO public.lab_services (lab_registration_id, test_id, price_inr, prerequisite, report_time_hours) VALUES
     (lab_ids[7], t_cbc, 350, '12 hours fasting required', 4),
     (lab_ids[7], t_sugar, 150, '12 hours fasting required', 2),
@@ -235,9 +167,7 @@ BEGIN
     (lab_ids[7], t_kft, 480, '8 hours fasting required', 8),
     (lab_ids[7], t_hba1c, 420, 'No special preparation required', 6);
 
-  -- =============================================
   -- Lab 8: South Delhi Diagnostics (Delhi 110017)
-  -- =============================================
   INSERT INTO public.lab_services (lab_registration_id, test_id, price_inr, prerequisite, report_time_hours) VALUES
     (lab_ids[8], t_cbc, 300, '12 hours fasting required', 5),
     (lab_ids[8], t_sugar, 130, '12 hours fasting required', 3),
@@ -247,9 +177,7 @@ BEGIN
     (lab_ids[8], t_urine, 100, 'Early morning sample preferred', 4),
     (lab_ids[8], t_vitd, 780, 'Avoid biotin supplements for 48 hours', 20);
 
-  -- =============================================
   -- Lab 9: Noida LifeCare Lab (Noida 201301)
-  -- =============================================
   INSERT INTO public.lab_services (lab_registration_id, test_id, price_inr, prerequisite, report_time_hours) VALUES
     (lab_ids[9], t_cbc, 270, '12 hours fasting required', 6),
     (lab_ids[9], t_sugar, 110, '12 hours fasting required', 3),
@@ -259,9 +187,7 @@ BEGIN
     (lab_ids[9], t_hba1c, 360, 'No special preparation required', 8),
     (lab_ids[9], t_vitb12, 690, 'No special preparation required', 22);
 
-  -- =============================================
   -- Lab 10: Mumbai Central Lab (Mumbai 400014)
-  -- =============================================
   INSERT INTO public.lab_services (lab_registration_id, test_id, price_inr, prerequisite, report_time_hours) VALUES
     (lab_ids[10], t_cbc, 380, '12 hours fasting required', 3),
     (lab_ids[10], t_sugar, 160, '12 hours fasting required', 2),
@@ -271,9 +197,7 @@ BEGIN
     (lab_ids[10], t_urine, 130, 'Early morning sample preferred', 2),
     (lab_ids[10], t_vitd, 900, 'Avoid biotin supplements for 48 hours', 16);
 
-  -- =============================================
   -- Lab 11: Pune DiagnoCenter (Pune 411005)
-  -- =============================================
   INSERT INTO public.lab_services (lab_registration_id, test_id, price_inr, prerequisite, report_time_hours) VALUES
     (lab_ids[11], t_cbc, 260, '12 hours fasting required', 6),
     (lab_ids[11], t_sugar, 105, '12 hours fasting required', 4),
@@ -283,9 +207,7 @@ BEGIN
     (lab_ids[11], t_kft, 370, '8 hours fasting required', 12),
     (lab_ids[11], t_urine, 85, 'Early morning sample preferred', 4);
 
-  -- =============================================
   -- Lab 12: Bangalore BioLab (Bangalore 560001)
-  -- =============================================
   INSERT INTO public.lab_services (lab_registration_id, test_id, price_inr, prerequisite, report_time_hours) VALUES
     (lab_ids[12], t_cbc, 310, '12 hours fasting required', 4),
     (lab_ids[12], t_sugar, 135, '12 hours fasting required', 3),
