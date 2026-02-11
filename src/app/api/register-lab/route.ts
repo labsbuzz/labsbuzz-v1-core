@@ -41,6 +41,21 @@ export async function POST(request: NextRequest) {
     const data = parsed.data;
     const supabase = createAdminClient();
 
+    // Check if this email already has a lab registration
+    const { data: existingByEmail } = await supabase
+      .from("lab_registrations")
+      .select("id")
+      .eq("email", data.email.toLowerCase())
+      .limit(1)
+      .maybeSingle();
+
+    if (existingByEmail) {
+      return NextResponse.json(
+        { error: "You have already registered a lab with this email. Only one lab per email is allowed." },
+        { status: 409 }
+      );
+    }
+
     // Check for duplicate lab reg ID
     const { data: existing } = await supabase
       .from("lab_registrations")
@@ -53,6 +68,23 @@ export async function POST(request: NextRequest) {
         { error: "A lab with this registration ID already exists." },
         { status: 409 }
       );
+    }
+
+    // If userId provided, also check by user_id
+    if (data.userId) {
+      const { data: existingByUser } = await supabase
+        .from("lab_registrations")
+        .select("id")
+        .eq("user_id", data.userId)
+        .limit(1)
+        .maybeSingle();
+
+      if (existingByUser) {
+        return NextResponse.json(
+          { error: "You have already registered a lab. Only one lab per account is allowed." },
+          { status: 409 }
+        );
+      }
     }
 
     // Generate unique lab ID

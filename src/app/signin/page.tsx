@@ -17,7 +17,7 @@ export default function SignInPage() {
   const [countdown, setCountdown] = useState(0);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const passwordEmails = ["amanksah123@gmail.com", "user3@labsbuzz.com", "user4@labsbuzz.com"];
+  const passwordEmails = ["amanksah123@gmail.com", "user3@labsbuzz.com", "user4@labsbuzz.com", "rvraj@gmail.com"];
   const isPasswordLogin = passwordEmails.includes(email.toLowerCase());
   const isAdminEmail = email.toLowerCase() === "amanksah123@gmail.com";
 

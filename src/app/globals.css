@@ -2,16 +2,71 @@
 
 @theme inline {
   --font-sans: var(--font-inter);
-  --color-primary: #1a3c5e;
-  --color-primary-light: #2a5a8a;
-  --color-accent: #2bb7a4;
-  --color-accent-dark: #239e8d;
-  --color-hero-start: #d6e4f0;
-  --color-hero-mid: #c8daea;
-  --color-hero-end: #b8cde0;
+  --color-primary: #1a4cff;
+  --color-primary-light: #3a6aff;
+  --color-accent: #00a6ff;
+  --color-accent-dark: #0090dd;
+  --color-hero-start: #e0f2ff;
+  --color-hero-mid: #f4f9ff;
+  --color-hero-end: #e6f7ff;
 }
 
 body {
   background: #ffffff;
   color: #1a1a1a;
+}
+
+/* Floating background blobs */
+@keyframes float {
+  from { transform: translateY(0px); }
+  to { transform: translateY(40px); }
+}
+
+/* Liquid spinning border for Register Labs button */
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes liquid-spin {
+  to { --angle: 360deg; }
+}
+
+.register-btn-liquid {
+  position: relative;
+  z-index: 1;
+}
+
+.register-btn-liquid::before {
+  content: "";
+  position: absolute;
+  inset: -2.5px;
+  border-radius: 50px;
+  background: conic-gradient(
+    from var(--angle),
+    #00ffcc,
+    #00c6ff,
+    #1a4cff,
+    #a855f7,
+    #00c6ff,
+    #00ffcc
+  );
+  z-index: -2;
+  animation: liquid-spin 2.5s linear infinite;
+  filter: blur(0.5px);
+}
+
+.register-btn-liquid::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #1243e8 0%, #0099dd 100%);
+  z-index: -1;
+  transition: background 0.3s;
+}
+
+.register-btn-liquid:hover::after {
+  background: linear-gradient(135deg, #1a4cff 0%, #00c6ff 100%);
 }

@@ -15,11 +15,10 @@ import {
   TestTubes,
   SearchX,
   X,
-  Phone,
-  Mail,
   ShieldCheck,
   CalendarCheck,
 } from "lucide-react";
+import BookingModal from "@/components/BookingModal";
 
 interface LabResult {
   id: string;
@@ -69,6 +68,8 @@ interface ModalData {
   price_inr: number;
   prerequisite: string;
   report_time_hours: number;
+  lab_service_id: string;
+  lab_registration_id: string;
 }
 
 type SearchMode = "idle" | "labs" | "services" | "lab_detail";
@@ -83,6 +84,7 @@ export default function Home() {
   const [labServicesLoading, setLabServicesLoading] = useState(false);
   const [searchInfo, setSearchInfo] = useState("");
   const [modalData, setModalData] = useState<ModalData | null>(null);
+  const [showBooking, setShowBooking] = useState(false);
 
   async function handleSearch(test: string, pincode: string) {
     setLoading(true);
@@ -161,6 +163,8 @@ export default function Home() {
       price_inr: service.price_inr,
       prerequisite: service.prerequisite,
       report_time_hours: service.report_time_hours,
+      lab_service_id: service.id,
+      lab_registration_id: service.lab_registration_id,
     });
   }
 
@@ -177,6 +181,8 @@ export default function Home() {
       price_inr: service.price_inr,
       prerequisite: service.prerequisite,
       report_time_hours: service.report_time_hours,
+      lab_service_id: service.id,
+      lab_registration_id: lab.id,
     });
   }
 
@@ -190,7 +196,7 @@ export default function Home() {
 
       {/* Search Results */}
       {(loading || searchMode !== "idle") && (
-        <section className="bg-gray-50 px-4 py-8">
+        <section className="bg-gradient-to-b from-hero-end to-white px-4 py-8">
           <div className="mx-auto max-w-3xl">
             {/* Loading */}
             {loading && (
@@ -512,10 +518,10 @@ export default function Home() {
             <div className="border-t border-gray-100 px-6 pb-6 pt-4">
               <button
                 onClick={() => {
-                  // Placeholder — booking flow to be implemented
-                  alert("Booking feature coming soon!");
+                  setShowBooking(true);
                 }}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-accent py-4 text-base font-bold text-white shadow-lg transition-colors hover:bg-accent-dark"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-base font-bold text-white shadow-lg transition-transform hover:scale-[1.02]"
+                style={{ background: "linear-gradient(135deg, #1a4cff, #00c6ff)" }}
               >
                 <CalendarCheck size={20} />
                 Book Now
@@ -526,6 +532,19 @@ export default function Home() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Booking Modal */}
+      {showBooking && modalData && (
+        <BookingModal
+          labServiceId={modalData.lab_service_id}
+          labRegistrationId={modalData.lab_registration_id}
+          testName={modalData.test_name}
+          category={modalData.category}
+          labName={modalData.lab_name}
+          pricePerTest={modalData.price_inr}
+          onClose={() => setShowBooking(false)}
+        />
       )}
     </>
   );

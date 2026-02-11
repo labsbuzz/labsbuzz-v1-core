@@ -640,15 +640,6 @@ export default function RegisterLabPage() {
               </div>
             ))}
 
-            {/* Register Another Lab */}
-            <button
-              onClick={() => setStep("form")}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-300 bg-white py-4 text-sm font-semibold text-gray-600 shadow-sm transition-colors hover:border-primary hover:text-primary"
-            >
-              <Plus size={18} />
-              Register Another Lab
-            </button>
-
             <div className="flex justify-center pt-2">
               <Link
                 href="/"
@@ -1293,7 +1284,7 @@ export default function RegisterLabPage() {
               be notified once approved.
             </p>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <div className="mt-6 flex justify-center">
               <Link
                 href="/"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-gray-200 px-6 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
@@ -1301,16 +1292,6 @@ export default function RegisterLabPage() {
                 <ArrowLeft size={16} />
                 Back to Home
               </Link>
-              <button
-                onClick={() => {
-                  setStep("form");
-                  setUniqueLabId("");
-                }}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-primary px-6 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
-              >
-                <Plus size={16} />
-                Register Another Lab
-              </button>
             </div>
           </div>
         )}
