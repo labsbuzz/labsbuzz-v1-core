@@ -1,9 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import { Search, MapPin } from "lucide-react";
 import Image from "next/image";
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  onSearch: (test: string, pincode: string) => void;
+}
+
+export default function HeroSection({ onSearch }: HeroSectionProps) {
+  const [testQuery, setTestQuery] = useState("");
+  const [pincodeQuery, setPincodeQuery] = useState("");
+
+  function handleSearch() {
+    const test = testQuery.trim();
+    const pincode = pincodeQuery.trim();
+    if (!test && !pincode) return;
+    onSearch(test, pincode);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") handleSearch();
+  }
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-hero-start via-hero-mid to-hero-end">
       {/* Background network pattern */}
@@ -51,6 +70,9 @@ export default function HeroSection() {
                 <input
                   type="text"
                   placeholder="Search Test/Scan..."
+                  value={testQuery}
+                  onChange={(e) => setTestQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   className="w-full bg-transparent text-base text-gray-700 placeholder-gray-400 outline-none"
                 />
               </div>
@@ -58,11 +80,18 @@ export default function HeroSection() {
                 <MapPin size={20} className="mr-2 shrink-0 text-accent" />
                 <input
                   type="text"
-                  placeholder="City/Pincode"
+                  placeholder="Pincode"
+                  value={pincodeQuery}
+                  onChange={(e) => setPincodeQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  maxLength={6}
                   className="w-full bg-transparent text-base text-gray-700 placeholder-gray-400 outline-none"
                 />
               </div>
-              <button className="rounded-full bg-accent px-8 py-3 text-base font-semibold text-white shadow-lg transition-colors hover:bg-accent-dark sm:rounded-l-none sm:rounded-r-full">
+              <button
+                onClick={handleSearch}
+                className="rounded-full bg-accent px-8 py-3 text-base font-semibold text-white shadow-lg transition-colors hover:bg-accent-dark sm:rounded-l-none sm:rounded-r-full"
+              >
                 Search
               </button>
             </div>

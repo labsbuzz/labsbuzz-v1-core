@@ -13,6 +13,13 @@ const labSchema = z.object({
   city: z.string().min(2, "City is required").max(100),
   district: z.string().min(2, "District is required").max(100),
   state: z.string().min(2, "State is required").max(100),
+  pincode: z
+    .string()
+    .regex(/^(\d{6})?$/, "Pincode must be 6 digits")
+    .optional()
+    .default(""),
+  latitude: z.number().min(-90).max(90).optional().default(0),
+  longitude: z.number().min(-180).max(180).optional().default(0),
   labRegIdNo: z.string().min(2, "Lab Registration ID is required").max(100),
   description: z.string().max(500).optional(),
   imageUrl: z.string().url().optional(),
@@ -117,6 +124,9 @@ export async function POST(request: NextRequest) {
         city: data.city,
         district: data.district,
         state: data.state,
+        pincode: data.pincode || "",
+        latitude: data.latitude,
+        longitude: data.longitude,
         lab_reg_id_no: data.labRegIdNo,
         image_url: data.imageUrl || null,
         description: data.description || null,

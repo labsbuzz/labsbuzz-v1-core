@@ -68,9 +68,53 @@ export async function POST() {
       }
     }
 
+    // Seed test users
+    const testUsers = [
+      { email: "user1@labsbuzz.test", role: "user" },
+      { email: "user2@labsbuzz.test", role: "user" },
+    ];
+    const testPassword = "12345678";
+
+    for (const testUser of testUsers) {
+      const userExists = existingUsers?.users?.some((u) => u.email === testUser.email);
+
+      if (!userExists) {
+        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+          email: testUser.email,
+          password: testPassword,
+          email_confirm: true,
+        });
+
+        if (createError) {
+          console.error(`Error creating ${testUser.email}:`, createError.message);
+          continue;
+        }
+
+        if (newUser.user) {
+          await supabase.from("profiles").upsert({
+            id: newUser.user.id,
+            email: testUser.email,
+            role: testUser.role,
+          });
+        }
+      } else {
+        const existing = existingUsers?.users?.find((u) => u.email === testUser.email);
+        if (existing) {
+          await supabase.auth.admin.updateUserById(existing.id, {
+            password: testPassword,
+          });
+          await supabase.from("profiles").upsert({
+            id: existing.id,
+            email: testUser.email,
+            role: testUser.role,
+          });
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      message: "Setup complete. Admin user created.",
+      message: "Setup complete. Admin + 2 test users created.",
       note: "Run the SQL from src/lib/db-setup.sql in the Supabase SQL Editor to create tables and RLS policies.",
     });
   } catch (error) {

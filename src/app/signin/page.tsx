@@ -17,6 +17,8 @@ export default function SignInPage() {
   const [countdown, setCountdown] = useState(0);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  const passwordEmails = ["amanksah123@gmail.com", "user1@labsbuzz.test", "user2@labsbuzz.test"];
+  const isPasswordLogin = passwordEmails.includes(email.toLowerCase());
   const isAdminEmail = email.toLowerCase() === "amanksah123@gmail.com";
 
   // Countdown timer for resend
@@ -53,10 +55,10 @@ export default function SignInPage() {
     setError("");
 
     try {
-      // Admin: sign in with password
-      if (isAdminEmail) {
+      // Password login (admin + test users)
+      if (isPasswordLogin) {
         if (!password) {
-          setError("Please enter the admin password");
+          setError("Please enter the password");
           setLoading(false);
           return;
         }
@@ -311,14 +313,14 @@ export default function SignInPage() {
                     />
                   </div>
 
-                  {/* Admin password field */}
-                  {isAdminEmail && (
+                  {/* Password field for admin + test users */}
+                  {isPasswordLogin && (
                     <div className="mt-3">
                       <label
                         htmlFor="password"
                         className="mb-1.5 block text-sm font-medium text-gray-700"
                       >
-                        Admin Password
+                        {isAdminEmail ? "Admin Password" : "Password"}
                       </label>
                       <input
                         id="password"
@@ -342,10 +344,10 @@ export default function SignInPage() {
                   >
                     {loading ? (
                       <Loader2 size={20} className="animate-spin" />
-                    ) : isAdminEmail ? (
+                    ) : isPasswordLogin ? (
                       <>
                         <Shield size={18} />
-                        Sign In as Admin
+                        {isAdminEmail ? "Sign In as Admin" : "Sign In"}
                       </>
                     ) : (
                       <>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Building2,
+  Plus,
   Mail,
   Phone,
   MapPin,
@@ -20,6 +21,7 @@ import {
   Clock,
   XCircle,
   Eye,
+  Navigation2,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,6 +50,7 @@ const labFormSchema = z.object({
   city: z.string().min(2, "City is required").max(100),
   district: z.string().min(2, "District is required").max(100),
   state: z.string().min(2, "Please select a state"),
+  pincode: z.string(),
   labRegIdNo: z.string().min(2, "Lab Registration ID is required").max(100),
   description: z.string().max(500, "Description must be under 500 characters").optional(),
 });
@@ -87,13 +90,18 @@ export default function RegisterLabPage() {
   const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Existing registration data
-  const [existingRegistration, setExistingRegistration] = useState<LabRegistration | null>(null);
+  // Existing registration data (supports multiple)
+  const [registrations, setRegistrations] = useState<LabRegistration[]>([]);
 
   // Admin data
   const [allRegistrations, setAllRegistrations] = useState<LabRegistration[]>([]);
   const [adminActionLoading, setAdminActionLoading] = useState<string | null>(null);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+
+  // Geolocation
+  const [latitude, setLatitude] = useState(0);
+  const [longitude, setLongitude] = useState(0);
+  const [locationStatus, setLocationStatus] = useState<"idle" | "loading" | "success" | "denied">("idle");
 
   // Stored form data after validation (before OTP)
   const [pendingFormData, setPendingFormData] = useState<LabFormData | null>(null);
@@ -121,6 +129,7 @@ export default function RegisterLabPage() {
       city: "",
       district: "",
       state: "",
+      pincode: "",
       labRegIdNo: "",
       description: "",
     },
@@ -152,7 +161,7 @@ export default function RegisterLabPage() {
               setAllRegistrations(data.registrations || []);
               setStep("admin");
             } else if (data.registrations && data.registrations.length > 0) {
-              setExistingRegistration(data.registrations[0]);
+              setRegistrations(data.registrations);
               setStep("status");
             } else {
               setStep("form");
@@ -179,6 +188,62 @@ export default function RegisterLabPage() {
     const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
     return () => clearTimeout(timer);
   }, [countdown]);
+
+  // Request geolocation when form is shown
+  useEffect(() => {
+    if (step !== "form") return;
+    if (!navigator.geolocation) {
+      setLocationStatus("denied");
+      return;
+    }
+
+    setLocationStatus("loading");
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setLatitude(lat);
+        setLongitude(lng);
+
+        // Reverse geocode with Nominatim
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+            { headers: { "Accept-Language": "en" } }
+          );
+          const data = await res.json();
+          const addr = data.address || {};
+
+          const city =
+            addr.city || addr.town || addr.village || addr.suburb || "";
+          const district =
+            addr.county || addr.state_district || addr.district || "";
+          const state = addr.state || "";
+          const pincode = addr.postcode || "";
+
+          if (city) setValue("city", city);
+          if (district) setValue("district", district);
+          if (state) {
+            // Match to INDIAN_STATES list
+            const matched = INDIAN_STATES.find(
+              (s) => s.toLowerCase() === state.toLowerCase()
+            );
+            if (matched) setValue("state", matched);
+          }
+          if (pincode) setValue("pincode", pincode);
+        } catch {
+          // Geocoding failed — user fills manually
+        }
+
+        setLocationStatus("success");
+      },
+      () => {
+        // User denied or error — lat/lng stay 0, user fills manually
+        setLocationStatus("denied");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, [step, setValue]);
 
   // Admin: approve or reject
   const handleAdminAction = async (registrationId: string, status: "approved" | "rejected") => {
@@ -328,6 +393,8 @@ export default function RegisterLabPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
+          latitude,
+          longitude,
           imageUrl,
           userId,
         }),
@@ -459,130 +526,130 @@ export default function RegisterLabPage() {
             <Building2 size={28} className="text-primary" />
           </div>
           <h1 className="text-2xl font-bold text-primary sm:text-3xl">
-            {step === "admin" ? "Lab Registration Requests" : "Register Your Lab"}
+            {step === "admin"
+              ? "Lab Registration Requests"
+              : step === "status"
+              ? "Your Labs"
+              : "Register Your Lab"}
           </h1>
           <p className="mt-1 text-sm text-gray-600">
             {step === "admin"
               ? "Review and manage lab registration requests"
+              : step === "status"
+              ? "Manage your lab registrations"
               : "Join LabsBuzz network and reach thousands of patients"}
           </p>
         </div>
 
-        {/* ===================== STATUS STEP (Existing Registration) ===================== */}
-        {step === "status" && existingRegistration && (
-          <div className="rounded-2xl bg-white p-6 shadow-xl sm:p-8">
-            {existingRegistration.status === "pending" && (
-              <>
-                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-yellow-100">
-                  <Clock size={40} className="text-yellow-600" />
-                </div>
-                <h2 className="text-center text-xl font-bold text-gray-900">
-                  Registration Under Review
-                </h2>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                  Your lab has been registered. Please wait for admin approval.
-                </p>
+        {/* ===================== STATUS STEP (All Registrations) ===================== */}
+        {step === "status" && registrations.length > 0 && (
+          <div className="space-y-4">
+            <p className="text-center text-sm text-gray-500">
+              You have {registrations.length} lab registration{registrations.length > 1 ? "s" : ""}
+            </p>
 
-                <div className="mx-auto mt-6 max-w-xs">
-                  <div className="flex items-center justify-between rounded-xl border-2 border-yellow-200 bg-yellow-50 px-4 py-3">
-                    <div>
-                      <p className="text-xs text-yellow-600">Your Lab ID</p>
-                      <span className="text-lg font-bold tracking-wider text-yellow-700">
-                        {existingRegistration.unique_lab_id}
+            {registrations.map((reg) => (
+              <div
+                key={reg.id}
+                className="overflow-hidden rounded-2xl bg-white shadow-xl"
+              >
+                <div className="flex items-start gap-4 p-5 sm:p-6">
+                  {/* Status icon */}
+                  <div
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+                      reg.status === "pending"
+                        ? "bg-yellow-100"
+                        : reg.status === "approved"
+                        ? "bg-green-100"
+                        : "bg-red-100"
+                    }`}
+                  >
+                    {reg.status === "pending" && <Clock size={24} className="text-yellow-600" />}
+                    {reg.status === "approved" && <CheckCircle2 size={24} className="text-green-600" />}
+                    {reg.status === "rejected" && <XCircle size={24} className="text-red-600" />}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate text-lg font-bold text-gray-900">
+                        {reg.lab_name}
+                      </h3>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          reg.status === "pending"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : reg.status === "approved"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {reg.status.charAt(0).toUpperCase() + reg.status.slice(1)}
                       </span>
                     </div>
-                    <button
-                      onClick={() => copyLabId(existingRegistration.unique_lab_id)}
-                      className="rounded-lg p-2 text-yellow-600 transition-colors hover:bg-yellow-100"
-                    >
-                      {copied ? <CheckCircle2 size={20} className="text-green-600" /> : <Copy size={20} />}
-                    </button>
-                  </div>
-                </div>
 
-                <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <h3 className="mb-2 text-sm font-semibold text-gray-700">Registration Details</h3>
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <p><span className="font-medium">Lab Name:</span> {existingRegistration.lab_name}</p>
-                    <p><span className="font-medium">Location:</span> {existingRegistration.city}, {existingRegistration.district}, {existingRegistration.state}</p>
-                    <p><span className="font-medium">Reg ID:</span> {existingRegistration.lab_reg_id_no}</p>
-                  </div>
-                </div>
-              </>
-            )}
+                    <p className="mt-0.5 text-sm text-gray-500">
+                      {reg.city}, {reg.state}
+                    </p>
 
-            {existingRegistration.status === "approved" && (
-              <>
-                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-                  <CheckCircle2 size={40} className="text-green-600" />
-                </div>
-                <h2 className="text-center text-xl font-bold text-gray-900">
-                  Lab Approved!
-                </h2>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                  Your lab <span className="font-semibold">{existingRegistration.lab_name}</span> has been approved.
-                </p>
-
-                <div className="mx-auto mt-6 max-w-xs">
-                  <div className="flex items-center justify-between rounded-xl border-2 border-green-200 bg-green-50 px-4 py-3">
-                    <div>
-                      <p className="text-xs text-green-600">Your Lab ID</p>
-                      <span className="text-lg font-bold tracking-wider text-green-700">
-                        {existingRegistration.unique_lab_id}
-                      </span>
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-xs font-mono text-gray-500">{reg.unique_lab_id}</span>
+                      <button
+                        onClick={() => copyLabId(reg.unique_lab_id)}
+                        className="rounded p-0.5 text-gray-400 hover:text-primary"
+                      >
+                        {copied ? <CheckCircle2 size={14} className="text-green-600" /> : <Copy size={14} />}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => copyLabId(existingRegistration.unique_lab_id)}
-                      className="rounded-lg p-2 text-green-600 transition-colors hover:bg-green-100"
-                    >
-                      {copied ? <CheckCircle2 size={20} /> : <Copy size={20} />}
-                    </button>
                   </div>
                 </div>
 
-                <button className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-primary text-base font-bold text-white shadow-lg transition-all hover:bg-primary-light">
-                  <Building2 size={20} />
-                  Register Your Service
-                </button>
-              </>
-            )}
+                {/* Action buttons per status */}
+                {reg.status === "approved" && (
+                  <div className="flex gap-3 border-t border-gray-100 px-5 py-3 sm:px-6">
+                    <Link
+                      href={`/lab/services?labId=${reg.id}`}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-light"
+                    >
+                      <Plus size={16} />
+                      Add Services
+                    </Link>
+                    <Link
+                      href="/lab/dashboard"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border-2 border-gray-200 px-3 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                    >
+                      Dashboard
+                    </Link>
+                  </div>
+                )}
 
-            {existingRegistration.status === "rejected" && (
-              <>
-                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
-                  <XCircle size={40} className="text-red-600" />
-                </div>
-                <h2 className="text-center text-xl font-bold text-gray-900">
-                  Registration Rejected
-                </h2>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                  Unfortunately, your lab registration for <span className="font-semibold">{existingRegistration.lab_name}</span> was not approved.
-                  Please contact support or try registering again with updated details.
-                </p>
+                {reg.status === "rejected" && (
+                  <div className="border-t border-gray-100 px-5 py-3 sm:px-6">
+                    <p className="text-xs text-red-600">
+                      Contact support or register again with updated details.
+                    </p>
+                  </div>
+                )}
 
-                <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
-                  <p className="text-sm text-red-700">
-                    <span className="font-medium">Lab ID:</span> {existingRegistration.unique_lab_id}
-                  </p>
-                  <p className="text-sm text-red-700">
-                    <span className="font-medium">Reg ID:</span> {existingRegistration.lab_reg_id_no}
-                  </p>
-                </div>
+                {reg.status === "pending" && (
+                  <div className="border-t border-gray-100 px-5 py-3 sm:px-6">
+                    <p className="text-xs text-yellow-700">
+                      Waiting for admin approval...
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
 
-                <button
-                  onClick={() => {
-                    setExistingRegistration(null);
-                    setStep("form");
-                  }}
-                  className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-primary text-base font-bold text-white shadow-lg transition-all hover:bg-primary-light"
-                >
-                  <Building2 size={20} />
-                  Register Again
-                </button>
-              </>
-            )}
+            {/* Register Another Lab */}
+            <button
+              onClick={() => setStep("form")}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-300 bg-white py-4 text-sm font-semibold text-gray-600 shadow-sm transition-colors hover:border-primary hover:text-primary"
+            >
+              <Plus size={18} />
+              Register Another Lab
+            </button>
 
-            <div className="mt-6 flex justify-center">
+            <div className="flex justify-center pt-2">
               <Link
                 href="/"
                 className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700"
@@ -917,6 +984,58 @@ export default function RegisterLabPage() {
               )}
             </div>
 
+            {/* Pincode */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Pincode
+              </label>
+              <input
+                {...register("pincode")}
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="e.g., 800001"
+                className="h-12 w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 text-base text-gray-900 placeholder-gray-400 outline-none transition-all focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/20"
+              />
+              {errors.pincode && (
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.pincode.message}
+                </p>
+              )}
+            </div>
+
+            {/* Location status indicator */}
+            {locationStatus !== "idle" && (
+              <div
+                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm ${
+                  locationStatus === "loading"
+                    ? "bg-blue-50 text-blue-700"
+                    : locationStatus === "success"
+                    ? "bg-green-50 text-green-700"
+                    : "bg-yellow-50 text-yellow-700"
+                }`}
+              >
+                {locationStatus === "loading" && (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Detecting your location...
+                  </>
+                )}
+                {locationStatus === "success" && (
+                  <>
+                    <Navigation2 size={16} />
+                    Location detected — address auto-filled. You can edit the fields above.
+                  </>
+                )}
+                {locationStatus === "denied" && (
+                  <>
+                    <Navigation2 size={16} />
+                    Location access denied. Please fill address manually.
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Lab Registration ID */}
             <div>
               <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
@@ -1182,6 +1301,16 @@ export default function RegisterLabPage() {
                 <ArrowLeft size={16} />
                 Back to Home
               </Link>
+              <button
+                onClick={() => {
+                  setStep("form");
+                  setUniqueLabId("");
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-primary px-6 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
+              >
+                <Plus size={16} />
+                Register Another Lab
+              </button>
             </div>
           </div>
         )}

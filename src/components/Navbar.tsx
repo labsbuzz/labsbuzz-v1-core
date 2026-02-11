@@ -9,6 +9,7 @@ import {
   X,
   LogOut,
   Loader2,
+  LayoutDashboard,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -17,14 +18,19 @@ import { createClient } from "@/lib/supabase/client";
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const supabase = createClient();
 
-    supabase.auth.getUser().then(({ data: { user: authUser } }) => {
+    supabase.auth.getUser().then(async ({ data: { user: authUser } }) => {
       if (authUser) {
         setUser({ email: authUser.email! });
+        // Fetch user role
+        const res = await fetch("/api/register-lab");
+        const data = await res.json();
+        setUserRole(data.role || null);
       }
       setLoading(false);
     });
@@ -33,6 +39,7 @@ export default function Navbar() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ? { email: session.user.email! } : null);
+      if (!session?.user) setUserRole(null);
     });
 
     return () => subscription.unsubscribe();
@@ -67,14 +74,21 @@ export default function Navbar() {
               Location
             </Link>
 
-            {loading ? (
-              <Loader2 size={16} className="animate-spin text-gray-400" />
-            ) : user ? (
+            {!loading && (user ? (
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
                   <User size={16} className="text-accent" />
                   {user.email.split("@")[0]}
                 </span>
+                {userRole === "labs" && (
+                  <Link
+                    href="/lab/dashboard"
+                    className="flex items-center gap-1.5 text-sm font-medium text-gray-700 transition-colors hover:text-primary"
+                  >
+                    <LayoutDashboard size={16} className="text-accent" />
+                    Dashboard
+                  </Link>
+                )}
                 <button
                   onClick={handleSignOut}
                   className="flex items-center gap-1.5 text-sm font-medium text-gray-500 transition-colors hover:text-red-600"
@@ -91,7 +105,7 @@ export default function Navbar() {
                 <User size={16} className="text-accent" />
                 Sign in
               </Link>
-            )}
+            ))}
 
             <Link
               href="/support"
@@ -133,12 +147,22 @@ export default function Navbar() {
               Location
             </Link>
 
-            {user ? (
+            {!loading && (user ? (
               <>
                 <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700">
                   <User size={18} className="text-accent" />
                   {user.email}
                 </div>
+                {userRole === "labs" && (
+                  <Link
+                    href="/lab/dashboard"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <LayoutDashboard size={18} className="text-accent" />
+                    Dashboard
+                  </Link>
+                )}
                 <button
                   onClick={() => {
                     handleSignOut();
@@ -159,7 +183,7 @@ export default function Navbar() {
                 <User size={18} className="text-accent" />
                 Sign in
               </Link>
-            )}
+            ))}
 
             <Link
               href="/support"
